@@ -1,4 +1,4 @@
-Trakcer Benchmark (Tested on python 2.7.10)
+Custom Version of Trakcer Benchmark (Tested on python 3.7 & 3.6)
 
 Usage
 - Default (for all trackers, all sequences, all evaltypes(OPE, SRE, TRE))
