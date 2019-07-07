@@ -1,3 +1,7 @@
+import os
+import sys
+import json
+
 from config import *
 from scripts import *
 
@@ -10,11 +14,14 @@ def save_seq_result(result):
         os.makedirs(src)
     try:
         string = json.dumps(result, default=lambda o : o.__dict__)
+        
     except:
-        print map(type, result[0].__dict__.values())
+        print (map(type, result[0].__dict__.values()))
         sys.exit()
     fileName = src + '/{0}.json'.format(seqName)
     resultFile = open(fileName, 'wb')
+    string = string.encode()
+
     resultFile.write(string)
     resultFile.close()
 
@@ -30,8 +37,10 @@ def save_scores(scoreList, testname=None):
         os.makedirs(scoreSrc)
     for score in scoreList:
         string = json.dumps(score, default=lambda o : o.__dict__)
+        
         fileName = scoreSrc + '/{0}.json'.format(score.name)
         scoreFile = open(fileName, 'wb')
+        string = string.encode()
         scoreFile.write(string)
         scoreFile.close()
 
@@ -47,7 +56,7 @@ def load_all_results(evalType):
 
 def load_result(evalType, tracker):
     resultSRC = RESULT_SRC.format(evalType)
-    print 'Loading \'{0}\'...'.format(tracker),
+    print ('Loading \'{0}\'...'.format(tracker),)
     src = os.path.join(resultSRC, tracker)
     resultNames = os.listdir(src)
     attrs = []
@@ -72,16 +81,17 @@ def load_result(evalType, tracker):
                 results.append([Result(**j) for j in jsonList])
             elif type(jsonList) is dict:
                 results.append([Result(**jsonList)])
-    print '({0} seqs)'.format(len(resultNames) - 1)
+    print ('({0} seqs)'.format(len(resultNames) - 1))
     return results, attrs
 
 def load_seq_result(evalType, tracker, sequence):
     resultSRC = RESULT_SRC.format(evalType)
-    print 'Loading {0}/{1}...'.format(tracker, sequence)
+    print ('Loading {0}/{1}...'.format(tracker, sequence))
     src = os.path.join(resultSRC, tracker)
     result_src = os.path.join(src, sequence+'.json')
     resultFile = open(result_src)
     string = resultFile.read()
+    
     jsonList = json.loads(string)
     if type(jsonList) is list:
         return [Result(**j) for j in jsonList]
@@ -97,8 +107,9 @@ def load_all_scores(evalType, testname):
 
 def load_scores(evalType, tracker, testname):
     resultSRC = RESULT_SRC.format(evalType)
-    print 'Loading \'{0}\'...'.format(tracker)
+    print ('Loading \'{0}\'...'.format(tracker))
     src = os.path.join(resultSRC, tracker+'/scores_{0}'.format(testname))
+    print(src)
     attrNames = os.listdir(src)
     attrs = []
     for attrName in attrNames:
@@ -106,7 +117,7 @@ def load_scores(evalType, tracker, testname):
         string = attrFile.read()
         j = json.loads(string)
         attr = Score(**j)
-        attr.successRateList = map(lambda o:o*100, attr.successRateList)
+        attr.successRateList = list(map(lambda o:o*100, attr.successRateList))
         attrs.append(attr)
         attrs.sort()
     return attrs

@@ -1,7 +1,8 @@
-import urllib2
+import urllib.request as urllib2
 import zipfile
 import shutil
 import copy
+import json
 
 from PIL import Image
 
@@ -52,11 +53,17 @@ def get_sub_seqs(s, numSeg, evalType):
 def setup_seqs(loadSeqs):
     seqs = make_seq_configs(loadSeqs)
     for seq in seqs:
-        print "\t" + seq.name + "\t" + seq.path
+        print ("\t" + seq.name + "\t" + seq.path)
         save_seq_config(seq)
 
 def save_seq_config(seq):
+    l=[]
+    for i in seq.__dict__['gtRect']:
+        l.append((list(i)))
+    #print(l)
+    seq.__dict__['gtRect'] = l 
     string = json.dumps(seq.__dict__, indent=2)
+    string = string.encode()
     src = os.path.join(SEQ_SRC, seq.name)
     configFile = open(src+'/cfg.json', 'wb')
     configFile.write(string)
@@ -64,7 +71,7 @@ def save_seq_config(seq):
 
 def load_seq_config(seqName):
     src = os.path.join(SEQ_SRC, seqName)
-    configFile = open(src+'/cfg.json')
+    configFile = open(src+'/cfg.json')#cfg.json
     string = configFile.read()
     j = json.loads(string)
     seq = Sequence(**j)
@@ -118,12 +125,12 @@ def make_seq_configs(loadSeqs):
         if not os.path.exists(src):
             os.makedirs(src)
         if not os.path.exists(imgSrc):
-            print name + ' does not have img directory'
+            print (name + ' does not have img directory')
             if DOWNLOAD_SEQS:
                 download_sequence(name)
             else:
-                print 'If you want to download sequences,\n' \
-                    + 'check if config.py\'s DOWNLOAD_SEQS is True'
+                print ('If you want to download sequences,\n' \
+                    + 'check if config.py\'s DOWNLOAD_SEQS is True')
                 sys.exit(1)
 
         imgfiles = sorted(os.listdir(imgSrc))
@@ -244,17 +251,17 @@ def download_sequence(seqName):
         
 
 def download_and_extract_file(url, dst, ext_dst):  
-    print 'Connecting to {0} ...'.format(url)
+    print ('Connecting to {0} ...'.format(url))
     try:
         u = urllib2.urlopen(url)
     except:
-        print 'Cannot download {0} : {1}'.format(
-            url.split('/')[-1], sys.exc_info()[1])
+        print ('Cannot download {0} : {1}'.format(
+            url.split('/')[-1], sys.exc_info()[1]))
         sys.exit(1)
     f = open(dst, 'wb')
     meta = u.info()
     file_size = int(meta.getheaders("Content-Length")[0])
-    print "Downloading {0} ({1} Bytes)..".format(url.split('/')[-1], file_size)
+    print ("Downloading {0} ({1} Bytes)..".format(url.split('/')[-1], file_size))
     file_size_dl = 0
     block_sz = 8192
     while True:
@@ -267,12 +274,12 @@ def download_and_extract_file(url, dst, ext_dst):
         status = r"{0:d} ({1:3.2f}%)".format(
             file_size_dl, file_size_dl * 100. / file_size)
         status = status + chr(8)*(len(status)+1)
-        print status,
+        print (status,)
     f.close()
 
     f = open(dst, 'rb')
     z = zipfile.ZipFile(f)
-    print '\nExtracting {0}...'.format(url.split('/')[-1])
+    print ('\nExtracting {0}...'.format(url.split('/')[-1]))
     z.extractall(ext_dst)
     f.close()
     os.remove(dst)
