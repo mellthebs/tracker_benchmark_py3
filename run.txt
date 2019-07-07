@@ -1,0 +1,4 @@
+python run_trackers.py -t SiamFC -s tb100 -e OPE
+python draw_graph.py
+python draw_graph.py precision
+python draw_bbox.py

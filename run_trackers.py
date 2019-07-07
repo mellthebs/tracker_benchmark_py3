@@ -15,14 +15,13 @@ def main(argv):
         opts, args = getopt.getopt(argv, "ht:e:s:",["tracker=","evaltype="
             ,"sequence="])
     except getopt.GetoptError:
-        print 'usage : run_trackers.py -t <trackers> -s <sequences>' \
-            + '-e <evaltypes>'
+        print ('usage : run_trackers.py -t <trackers> -s <sequences> -e <evaltypes>')
         sys.exit(1)
 
     for opt, arg in opts:
         if opt == '-h':
-            print 'usage : run_trackers.py -t <trackers> -s <sequences>' \
-                + '-e <evaltypes>'
+            print ('usage : run_trackers.py -t <trackers> -s <sequences>' \
+                + '-e <evaltypes>')
             sys.exit(0)
         elif opt in ("-t", "--tracker"):
             trackers = [x.strip() for x in arg.split(',')]
@@ -38,11 +37,11 @@ def main(argv):
             # evalTypes = [arg]
 
     if SETUP_SEQ:
-        print 'Setup sequences ...'
+        print ('Setup sequences ...')
         butil.setup_seqs(loadSeqs)
-    testname = raw_input("Input Test name : ")
-    print 'Starting benchmark for {0} trackers, evalTypes : {1}'.format(
-        len(trackers), evalTypes)
+    testname = input("Input Test name : ")
+    print ('Starting benchmark for {0} trackers, evalTypes : {1}'.format(
+        len(trackers), evalTypes))
     for evalType in evalTypes:
         seqNames = butil.get_seq_names(loadSeqs)
         seqs = butil.load_seq_configs(seqNames)
@@ -53,23 +52,23 @@ def main(argv):
             if len(results) > 0:
                 evalResults, attrList = butil.calc_result(tracker,
                     seqs, results, evalType)
-                print "Result of Sequences\t -- '{0}'".format(tracker)
+                print ("Result of Sequences\t -- '{0}'".format(tracker))
                 for seq in seqs:
                     try:
-                        print '\t\'{0}\'{1}'.format(
-                            seq.name, " "*(12 - len(seq.name))),
-                        print "\taveCoverage : {0:.3f}%".format(
-                            sum(seq.aveCoverage)/len(seq.aveCoverage) * 100),
-                        print "\taveErrCenter : {0:.3f}".format(
-                            sum(seq.aveErrCenter)/len(seq.aveErrCenter))
+                        print ('\t\'{0}\'{1}'.format(
+                            seq.name, " "*(12 - len(seq.name))),)
+                        print ("\taveCoverage : {0:.3f}%".format(
+                            sum(seq.aveCoverage)/len(seq.aveCoverage) * 100),)
+                        print ("\taveErrCenter : {0:.3f}".format(
+                            sum(seq.aveErrCenter)/len(seq.aveErrCenter)))
                     except:
-                        print '\t\'{0}\'  ERROR!!'.format(seq.name)
+                        print ('\t\'{0}\'  ERROR!!'.format(seq.name))
 
-                print "Result of attributes\t -- '{0}'".format(tracker)
+                print ("Result of attributes\t -- '{0}'".format(tracker))
                 for attr in attrList:
-                    print "\t\'{0}\'".format(attr.name),
-                    print "\toverlap : {0:02.1f}%".format(attr.overlap),
-                    print "\tfailures : {0:.1f}".format(attr.error)
+                    print ("\t\'{0}\'".format(attr.name),)
+                    print ("\toverlap : {0:02.1f}%".format(attr.overlap),)
+                    print ("\tfailures : {0:.1f}".format(attr.error))
 
                 if SAVE_RESULT : 
                     butil.save_scores(attrList, testname)
@@ -90,6 +89,9 @@ def run_trackers(trackers, seqs, evalType, shiftTypeSet):
 
         for idxTrk in range(len(trackers)):         
             t = trackers[idxTrk]
+            if not os.path.exists(TRACKER_SRC + t):
+                print ('{0} does not exists'.format(t))
+                sys.exit(1)
             if not OVERWRITE_RESULT:
                 trk_src = os.path.join(RESULT_SRC.format(evalType), t)
                 result_src = os.path.join(trk_src, s.name+'.json')
@@ -100,30 +102,25 @@ def run_trackers(trackers, seqs, evalType, shiftTypeSet):
             seqResults = []
             seqLen = len(subSeqs)
             for idx in range(seqLen):
-                print '{0}_{1}, {2}_{3}:{4}/{5} - {6}'.format(
+                print ('{0}_{1}, {2}_{3}:{4}/{5} - {6}'.format(
                     idxTrk + 1, t, idxSeq + 1, s.name, idx + 1, seqLen, \
-                    evalType)
+                    evalType))
                 rp = tmpRes_path + '_' + t + '_' + str(idx+1) + '/'
                 if SAVE_IMAGE and not os.path.exists(rp):
                     os.makedirs(rp)
                 subS = subSeqs[idx]
                 subS.name = s.name + '_' + str(idx)
-                
-                move_dir = False
-                if os.path.exists(os.path.join(TRACKER_SRC, t)):
-                    move_dir = True
-                    os.chdir(os.path.join(TRACKER_SRC, t))
+                    
+                os.chdir(TRACKER_SRC + t)
                 funcName = 'run_{0}(subS, rp, SAVE_IMAGE)'.format(t)
                 try:
                     res = eval(funcName)
                 except:
-                    print 'failed to execute {0} : {1}'.format(
-                        t, sys.exc_info())
-                    if move_dir:
-                        os.chdir(WORKDIR)         
+                    print ('failed to execute {0} : {1}'.format(
+                        t, sys.exc_info()))
+                    os.chdir(WORKDIR)         
                     break
-                if move_dir:
-                    os.chdir(WORKDIR)
+                os.chdir(WORKDIR)
 
                 if evalType == 'SRE':
                     r = Result(t, s.name, subS.startFrame, subS.endFrame,
@@ -131,7 +128,7 @@ def run_trackers(trackers, seqs, evalType, shiftTypeSet):
                 else:
                     r = Result(t, s.name, subS.startFrame, subS.endFrame,
                         res['type'], evalType, res['res'], res['fps'], None)
-                try: r.tmplsize = res['tmplsize'][0]
+                try: r.tmplsize = butil.d_to_f(res['tmplsize'][0])
                 except: pass
                 r.refresh_dict()
                 seqResults.append(r)
